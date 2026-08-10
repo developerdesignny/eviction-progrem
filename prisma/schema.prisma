@@ -1,0 +1,247 @@
+// Docket — eviction case management.
+// Mirrors docs/db-schema.md. Nothing in this schema is ever deleted: records are
+// hidden (Contact/StageDefinition/FieldDefinition), deactivated (User) or closed
+// (Project). That is why no relation declares onDelete: Cascade.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProjectType {
+  NP
+  HOLDOVER
+}
+
+enum CloseReason {
+  BALANCE_PAID_IN_FULL
+  TENANT_VACATED
+  CASE_DISMISSED
+  SETTLED_OUTSIDE_COURT
+  OTHER
+}
+
+enum ContactRole {
+  TENANT
+  OCCUPANT
+}
+
+enum FieldType {
+  TEXT
+  DATE
+  CHECKBOX
+  CURRENCY
+  SELECT
+  FILE
+}
+
+enum EntryPoint {
+  FRONT
+  BACK
+  SIDE
+  RIGHT
+  LEFT
+}
+
+enum StatusEvent {
+  CLOSED
+  REOPENED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  active       Boolean  @default(true) // deactivated instead of deleted
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+/// Allocates the per-year case number sequence (EV-2026-0001).
+model CaseCounter {
+  year       Int @id
+  lastNumber Int @default(0)
+}
+
+model Contact {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String?
+  email     String?
+  address   String?
+  notes     String?
+  hidden    Boolean  @default(false) // never deleted; hidden = unsearchable + unlinkable
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  landlordProjects Project[]        @relation("LandlordContact")
+  projectLinks     ProjectContact[]
+
+  @@index([name])
+}
+
+/// Join table for Tenant(s) on Lease / Occupant(s) 18+ Not on Lease.
+model ProjectContact {
+  id        String      @id @default(uuid())
+  projectId String
+  project   Project     @relation(fields: [projectId], references: [id])
+  contactId String
+  contact   Contact     @relation(fields: [contactId], references: [id])
+  role      ContactRole
+
+  @@unique([projectId, contactId, role])
+  @@index([contactId])
+}
+
+model Project {
+  id           String      @id @default(uuid())
+  caseNumber   String      @unique // auto: EV-2026-0001
+  docketNumber String? // court-assigned, entered manually later
+  type         ProjectType
+
+  landlordContactId String?
+  landlordContact   Contact?         @relation("LandlordContact", fields: [landlordContactId], references: [id])
+  contactLinks      ProjectContact[]
+
+  // --- Intake (fixed 29-field form, Section A of docs/field-mapping.md) ---
+  tenancyStartDate     DateTime?
+  lengthOfTenancy      String?
+  monthlyRentAmount    Decimal?        @db.Decimal(12, 2)
+  totalRentBalanceOwed Decimal?        @db.Decimal(12, 2)
+  leaseAgreementFileId String?
+  leaseAgreementFile   FileAttachment? @relation("LeaseAgreement", fields: [leaseAgreementFileId], references: [id])
+  ledgerAttached       Boolean         @default(false)
+
+  propertyStreetAddress         String?
+  apartmentUnitNumber           String?
+  floorNumber                   String?
+  propertyCity                  String?
+  propertyState                 String?
+  propertyZip                   String?
+  propMgmtAgreementFileId       String?
+  propMgmtAgreementFile         FileAttachment? @relation("PropMgmtAgreement", fields: [propMgmtAgreementFileId], references: [id])
+  propertyAccessStraightforward Boolean         @default(false)
+  additionalAccessInstructions  String?
+  activeRentalPermit            Boolean         @default(false)
+
+  submittedByName    String?
+  submittedByTitle   String?
+  submittedByCompany String?
+  submittedByPhone   String?
+  submittedByEmail   String?
+  submittedByDate    DateTime?
+
+  markedPersonalConfidential Boolean     @default(false)
+  entryPoint                 EntryPoint?
+  // "Evictions Type" is the `type` field above.
+
+  /// Computed from the core intake subset — see docs/requirements.md.
+  intakeDone Boolean @default(false)
+
+  // --- Stages (dynamic, admin-configured, empty until built in Config) ---
+  stages ProjectStage[]
+
+  // --- Close (no delete; reopen is manual-only, from the Archive screen) ---
+  closedAt          DateTime?
+  closeReason       CloseReason?
+  closeReasonDetail String?
+  statusEvents      ProjectStatusEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([closedAt])
+  @@index([type])
+}
+
+model StageDefinition {
+  id            String            @id @default(uuid())
+  projectType   ProjectType
+  name          String
+  sortOrder     Int
+  hidden        Boolean           @default(false) // hide instead of delete
+  fields        FieldDefinition[]
+  projectStages ProjectStage[]
+
+  @@index([projectType, sortOrder])
+}
+
+model FieldDefinition {
+  id                String          @id @default(uuid())
+  stageDefinitionId String
+  stageDefinition   StageDefinition @relation(fields: [stageDefinitionId], references: [id])
+  label             String
+  type              FieldType
+  options           Json? // choices, for SELECT
+  required          Boolean         @default(false)
+  sortOrder         Int
+  hidden            Boolean         @default(false) // hide instead of delete
+  values            FieldValue[]
+
+  @@index([stageDefinitionId, sortOrder])
+}
+
+model ProjectStage {
+  id                String          @id @default(uuid())
+  projectId         String
+  project           Project         @relation(fields: [projectId], references: [id])
+  stageDefinitionId String
+  stageDefinition   StageDefinition @relation(fields: [stageDefinitionId], references: [id])
+  /// Derived on every value write. Only stages with no visible fields are toggled by hand.
+  completed         Boolean         @default(false)
+  completedAt       DateTime?
+  fieldValues       FieldValue[]
+
+  @@unique([projectId, stageDefinitionId])
+}
+
+model FieldValue {
+  id                String          @id @default(uuid())
+  projectStageId    String
+  projectStage      ProjectStage    @relation(fields: [projectStageId], references: [id])
+  fieldDefinitionId String
+  fieldDefinition   FieldDefinition @relation(fields: [fieldDefinitionId], references: [id])
+
+  textValue    String?
+  dateValue    DateTime?
+  boolValue    Boolean?
+  numericValue Decimal?        @db.Decimal(12, 2)
+  fileId       String?
+  file         FileAttachment? @relation(fields: [fileId], references: [id])
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([projectStageId, fieldDefinitionId])
+}
+
+/// Audit trail of every close / reopen, so repeat closures keep their history.
+model ProjectStatusEvent {
+  id           String       @id @default(uuid())
+  projectId    String
+  project      Project      @relation(fields: [projectId], references: [id])
+  event        StatusEvent
+  reason       CloseReason? // set on CLOSED
+  reasonDetail String?
+  userId       String?
+  at           DateTime     @default(now())
+
+  @@index([projectId, at])
+}
+
+model FileAttachment {
+  id         String   @id @default(uuid())
+  filename   String
+  mimeType   String
+  size       Int
+  data       Bytes // file content stored directly in Postgres
+  uploadedAt DateTime @default(now())
+
+  leaseFor       Project[]    @relation("LeaseAgreement")
+  propMgmtFor    Project[]    @relation("PropMgmtAgreement")
+  fieldValues    FieldValue[]
+}

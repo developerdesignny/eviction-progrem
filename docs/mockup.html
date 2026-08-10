@@ -1,0 +1,1169 @@
+<title>Docket — Eviction Case Management (Mockup)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg: #eef1f0;
+    --surface: #ffffff;
+    --surface-2: #f4f6f4;
+    --ink: #17211d;
+    --ink-muted: #57635c;
+    --ink-faint: #8a958e;
+    --border: #d7ddd8;
+    --border-soft: #e4e8e4;
+    --accent: #1f4e4a;
+    --accent-strong: #143734;
+    --accent-soft: #dceae7;
+    --accent-ink: #0f2f2c;
+    --success: #2e7d4f;
+    --success-soft: #dff0e5;
+    --warning: #b8792a;
+    --warning-soft: #f5e6d2;
+    --critical: #b23a3a;
+    --critical-soft: #f6dfdf;
+    --plum: #6b5b95;
+    --plum-soft: #e7e3f0;
+    --sidebar-bg: #17211d;
+    --sidebar-ink: #cdd6d0;
+    --sidebar-ink-dim: #78877e;
+    --sidebar-active: #24322c;
+    --shadow: 0 1px 2px rgba(23,33,29,0.06), 0 4px 14px rgba(23,33,29,0.06);
+    --serif: Iowan Old Style, "Palatino Linotype", Palatino, Georgia, Cambria, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111815;
+      --surface: #1a2320;
+      --surface-2: #202b27;
+      --ink: #e7ece9;
+      --ink-muted: #9aa69f;
+      --ink-faint: #66756d;
+      --border: #2c3733;
+      --border-soft: #253027;
+      --accent: #56b3a4;
+      --accent-strong: #7bcabd;
+      --accent-soft: #1e3e3a;
+      --accent-ink: #d3ece7;
+      --success: #4ea378;
+      --success-soft: #1c3527;
+      --warning: #d7a052;
+      --warning-soft: #3a2e18;
+      --critical: #d97575;
+      --critical-soft: #3a2020;
+      --plum: #a596c9;
+      --plum-soft: #2c273c;
+      --sidebar-bg: #0d1210;
+      --sidebar-ink: #c3ccc6;
+      --sidebar-ink-dim: #61706a;
+      --sidebar-active: #1c2622;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 14px rgba(0,0,0,0.25);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #111815; --surface: #1a2320; --surface-2: #202b27; --ink: #e7ece9;
+    --ink-muted: #9aa69f; --ink-faint: #66756d; --border: #2c3733; --border-soft: #253027;
+    --accent: #56b3a4; --accent-strong: #7bcabd; --accent-soft: #1e3e3a; --accent-ink: #d3ece7;
+    --success: #4ea378; --success-soft: #1c3527; --warning: #d7a052; --warning-soft: #3a2e18;
+    --critical: #d97575; --critical-soft: #3a2020; --plum: #a596c9; --plum-soft: #2c273c;
+    --sidebar-bg: #0d1210; --sidebar-ink: #c3ccc6; --sidebar-ink-dim: #61706a; --sidebar-active: #1c2622;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 14px rgba(0,0,0,0.25);
+  }
+  :root[data-theme="light"] {
+    --bg: #eef1f0; --surface: #ffffff; --surface-2: #f4f6f4; --ink: #17211d;
+    --ink-muted: #57635c; --ink-faint: #8a958e; --border: #d7ddd8; --border-soft: #e4e8e4;
+    --accent: #1f4e4a; --accent-strong: #143734; --accent-soft: #dceae7; --accent-ink: #0f2f2c;
+    --success: #2e7d4f; --success-soft: #dff0e5; --warning: #b8792a; --warning-soft: #f5e6d2;
+    --critical: #b23a3a; --critical-soft: #f6dfdf; --plum: #6b5b95; --plum-soft: #e7e3f0;
+    --sidebar-bg: #17211d; --sidebar-ink: #cdd6d0; --sidebar-ink-dim: #78877e; --sidebar-active: #24322c;
+    --shadow: 0 1px 2px rgba(23,33,29,0.06), 0 4px 14px rgba(23,33,29,0.06);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; margin: 0; color: var(--ink); }
+  .tnum { font-variant-numeric: tabular-nums; }
+  .mono { font-family: var(--mono); }
+  button { font-family: inherit; cursor: pointer; }
+  a { color: inherit; }
+  ::selection { background: var(--accent-soft); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- App shell ---------- */
+  .app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+  .sidebar {
+    background: var(--sidebar-bg); color: var(--sidebar-ink);
+    padding: 22px 14px; display: flex; flex-direction: column; gap: 26px;
+  }
+  .brand { display: flex; align-items: baseline; gap: 8px; padding: 0 8px; }
+  .brand .mark { font-family: var(--serif); font-size: 20px; font-weight: 700; color: #fff; letter-spacing: 0.01em; }
+  .brand .sub { font-size: 10px; text-transform: uppercase; letter-spacing: 0.11em; color: var(--sidebar-ink-dim); }
+  .nav { display: flex; flex-direction: column; gap: 2px; }
+  .nav-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.11em; color: var(--sidebar-ink-dim); padding: 10px 10px 6px; }
+  .nav button {
+    all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 6px; font-size: 13.5px; color: var(--sidebar-ink);
+  }
+  .nav button:hover { background: var(--sidebar-active); }
+  .nav button.active { background: var(--sidebar-active); color: #fff; font-weight: 600; }
+  .nav button .ico { width: 15px; text-align: center; opacity: 0.85; font-family: var(--mono); font-size: 12px; }
+  .sidebar-foot { margin-top: auto; padding: 10px 10px 0; border-top: 1px solid rgba(255,255,255,0.08); }
+  .who { display: flex; align-items: center; gap: 9px; padding-top: 12px; }
+  .avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .who .name { font-size: 12.5px; color: #fff; }
+  .who .role { font-size: 10.5px; color: var(--sidebar-ink-dim); }
+
+  .main { padding: 30px 40px 60px; max-width: 1200px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .pagehead { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+  .pagehead h1 { font-size: 25px; }
+  .pagehead .desc { color: var(--ink-muted); font-size: 13px; margin-top: 4px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--ink); padding: 8px 14px; border-radius: 7px;
+    font-size: 13px; font-weight: 600; box-shadow: var(--shadow);
+  }
+  .btn:hover { border-color: var(--ink-faint); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  /* ---------- Login ---------- */
+  .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+  .login-card { width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 34px 32px; box-shadow: var(--shadow); }
+  .login-mark { font-family: var(--serif); font-size: 22px; font-weight: 700; text-align: center; }
+  .login-tag { text-align: center; font-size: 11.5px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+  .login-rule { height: 1px; background: var(--border); margin: 22px 0; }
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--ink-muted); }
+  .field input, .field select { border: 1px solid var(--border); background: var(--surface-2); color: var(--ink); border-radius: 6px; padding: 9px 10px; font-size: 13.5px; font-family: inherit; }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .login-card .btn-primary { width: 100%; justify-content: center; margin-top: 6px; }
+  .login-foot { text-align: center; font-size: 11.5px; color: var(--ink-faint); margin-top: 18px; }
+
+  /* ---------- Filters / toolbar ---------- */
+  .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .chip-filter { display: flex; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 3px; }
+  .chip-filter button { all: unset; padding: 6px 12px; border-radius: 6px; font-size: 12.5px; color: var(--ink-muted); font-weight: 600; }
+  .chip-filter button.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+  .search { flex: 1; min-width: 180px; }
+  .search input { width: 100%; border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--ink); }
+
+  /* ---------- Project list ---------- */
+  .plist { display: flex; flex-direction: column; gap: 10px; }
+  .prow {
+    display: grid; grid-template-columns: 1fr 100px 200px 130px 26px; align-items: center; gap: 18px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px;
+    box-shadow: var(--shadow); cursor: pointer;
+  }
+  .prow:hover { border-color: var(--accent); }
+  .prow .id { color: var(--ink-faint); }
+  .prow .primary { display: flex; flex-direction: column; gap: 3px; }
+  .prow .addr { font-weight: 600; font-size: 14px; }
+  .prow .sub { font-size: 12px; color: var(--ink-muted); display: flex; gap: 8px; align-items: center; }
+  .prow .sub .mono { font-size: 11px; color: var(--ink-muted); }
+  .tag { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; width: fit-content; }
+  .tag-np { background: var(--accent-soft); color: var(--accent-ink); }
+  .tag-holdover { background: var(--plum-soft); color: var(--plum); }
+  .segbar { display: flex; gap: 2px; height: 8px; border-radius: 4px; overflow: hidden; }
+  .seg { flex: 1; background: var(--border-soft); }
+  .seg.done { background: var(--success); }
+  .seg.active { background: var(--warning); }
+  .segwrap { display: flex; flex-direction: column; gap: 5px; }
+  .segwrap .lbl { font-size: 11px; color: var(--ink-muted); }
+  .stagepill { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; width: fit-content; }
+  .stagepill.warn { background: var(--warning-soft); color: var(--warning); }
+  .stagepill.crit { background: var(--critical-soft); color: var(--critical); }
+  .stagepill.ok { background: var(--success-soft); color: var(--success); }
+  .chev { color: var(--ink-faint); font-size: 16px; }
+
+  /* ---------- Project detail ---------- */
+  .backlink { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-muted); font-weight: 600; margin-bottom: 14px; }
+  .case-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 22px; }
+  .case-head h1 { font-size: 24px; }
+  .case-meta { display: flex; gap: 10px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+  .case-meta .mono { font-size: 12px; color: var(--ink-muted); }
+  .overall { display: flex; align-items: center; gap: 12px; }
+  .ring { width: 54px; height: 54px; position: relative; }
+  .ring svg { transform: rotate(-90deg); }
+  .ring .pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; font-family: var(--mono); }
+
+  .intake-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px 20px; margin-bottom: 22px; box-shadow: var(--shadow); }
+  .intake-panel .ihead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 12px; }
+  .intake-panel .ihead h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); font-family: var(--sans); font-weight: 700; }
+  .intake-panel .ihead .edit-actions { display: none; gap: 8px; flex: none; }
+  .intake-panel.editing .ihead .edit-actions { display: flex; }
+  .intake-panel.editing .ihead .view-actions { display: none; }
+  .intake-panel .editing-note { display: none; font-size: 11.5px; color: var(--accent); font-weight: 600; margin-bottom: 14px; }
+  .intake-panel.editing .editing-note { display: block; }
+
+  .ihead-toggle { all: unset; display: flex; align-items: center; gap: 9px; cursor: pointer; min-width: 0; }
+  .ihead-toggle .chev-ico { color: var(--ink-faint); font-size: 11px; transition: transform 0.15s ease; flex: none; }
+  .intake-panel.collapsed .ihead-toggle .chev-ico { transform: rotate(-90deg); }
+  .ihead-toggle .isummary { display: none; font-size: 12px; color: var(--ink-muted); font-weight: 500; text-transform: none; letter-spacing: 0; white-space: nowrap; }
+  .intake-panel.collapsed .ihead-toggle .isummary { display: inline; }
+  .intake-panel.collapsed .ibody { display: none; }
+  .intake-panel.collapsed .editing-note { display: none; }
+  .intake-panel.collapsed .ihead { margin-bottom: 0; }
+
+  .igroup { padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--border-soft); }
+  .igroup:first-child { padding-top: 0; margin-top: 0; border-top: none; }
+  .igroup-title { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-muted); font-weight: 700; margin-bottom: 11px; }
+  .igrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 24px; }
+  .igrid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .igrid.cols-1 { grid-template-columns: 1fr; }
+  .ifield .k { font-size: 11.5px; color: var(--ink-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ifield .v { font-size: 13.5px; margin-top: 3px; font-weight: 500; }
+  .ifield .v.mono { font-family: var(--mono); }
+  .ifield .v-edit { display: none; margin-top: 4px; }
+  .intake-panel.editing .ifield .v-edit { display: block; }
+  .intake-panel.editing .ifield .v-view { display: none; }
+  .ifield input[type="text"], .ifield input[type="date"], .ifield select {
+    width: 100%; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink);
+    border-radius: 6px; padding: 6px 8px; font-size: 13px; font-family: inherit;
+  }
+  .ifield input[type="date"], .ifield input.curr { font-family: var(--mono); }
+  .ifield select { appearance: none; background-image: none; }
+
+  /* Custom checkbox — shared by stage checklists, intake fields, and the Intake Done row */
+  .box {
+    width: 17px; height: 17px; border-radius: 5px; border: 1.75px solid var(--ink-faint);
+    background: var(--surface); flex: none; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: #fff; cursor: pointer;
+    transition: background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+  }
+  .box:hover { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .box.on { background: var(--success); border-color: var(--success); }
+  .box.on:hover { border-color: var(--success); box-shadow: 0 0 0 3px var(--success-soft); filter: brightness(0.95); }
+
+  .ifield.checkfield { display: flex; flex-direction: row; align-items: center; gap: 8px; }
+  .ifield.checkfield .k { margin: 0; }
+  .intake-panel:not(.editing) .ifield.checkfield .box { cursor: default; opacity: 0.55; pointer-events: none; box-shadow: none; }
+
+  .intake-done-row {
+    display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 12px 14px;
+    background: var(--success-soft); border-radius: 8px;
+  }
+  .intake-panel:not(.editing) .intake-done-row .box { cursor: default; opacity: 0.55; pointer-events: none; box-shadow: none; }
+  .intake-done-row .k { font-size: 13px; font-weight: 700; color: var(--success); text-transform: none; letter-spacing: 0; }
+
+  .chiprow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 8px 4px 12px; font-size: 12.5px; }
+  .chip .rm { display: none; width: 15px; height: 15px; border-radius: 50%; background: var(--border); color: var(--ink-muted); font-size: 10px; align-items: center; justify-content: center; cursor: pointer; line-height: 1; }
+  .intake-panel.editing .chip .rm { display: inline-flex; }
+  .chip-add { display: none; border: 1px dashed var(--border); background: transparent; border-radius: 20px; padding: 3px 12px; font-size: 12.5px; color: var(--ink-muted); align-items: center; }
+  .intake-panel.editing .chip-add { display: inline-flex; }
+  .chip-add input { border: none; background: transparent; font-size: 12.5px; color: var(--ink); font-family: inherit; width: 130px; padding: 2px 0; }
+  .chip-add input:focus { outline: none; }
+  .chip-add input::placeholder { color: var(--ink-faint); }
+
+  .contact-card {
+    display: flex; align-items: center; gap: 12px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px 9px 10px; width: fit-content;
+  }
+  .cc-avatar {
+    width: 34px; height: 34px; border-radius: 8px; background: var(--accent-soft); color: var(--accent-ink);
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex: none;
+  }
+  .cc-info { display: flex; flex-direction: column; gap: 2px; }
+  .cc-name { font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .cc-role {
+    font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;
+    color: var(--accent); background: var(--accent-soft); border-radius: 4px; padding: 1px 6px;
+  }
+  .cc-detail { font-size: 11.5px; color: var(--ink-muted); }
+  .cc-view { margin-left: 8px; flex: none; }
+  .cc-remove {
+    all: unset; margin-left: 6px; width: 18px; height: 18px; border-radius: 50%; background: var(--border);
+    color: var(--ink-muted); font-size: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex: none;
+  }
+  .field-hint { font-size: 11px; color: var(--ink-faint); margin-top: 6px; max-width: 360px; }
+
+  .contact-modal .cm-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .contact-modal .cm-avatar {
+    width: 46px; height: 46px; border-radius: 10px; background: var(--accent-soft); color: var(--accent-ink);
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px; flex: none;
+  }
+  .contact-modal .cm-title h3 { font-size: 16px; }
+  .contact-modal dl { display: grid; grid-template-columns: 90px 1fr; row-gap: 11px; column-gap: 10px; margin: 0; }
+  .contact-modal dt { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-muted); font-weight: 600; align-self: center; }
+  .contact-modal dd { margin: 0; font-size: 13px; }
+  .contact-modal .cm-linked {
+    margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-soft);
+    font-size: 12px; color: var(--ink-muted);
+  }
+  .contact-modal .cm-linked strong { color: var(--ink); }
+
+  .file-pill {
+    display: inline-flex; align-items: center; gap: 8px; background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; max-width: 100%;
+  }
+  .file-pill .file-ico { flex: none; font-size: 14px; }
+  .file-pill .file-name { font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-pill .file-meta { font-size: 11px; color: var(--ink-faint); flex: none; }
+  .file-pill.editing .file-remove {
+    all: unset; margin-left: 2px; width: 15px; height: 15px; border-radius: 50%; background: var(--border);
+    color: var(--ink-muted); font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .file-empty { font-size: 12.5px; color: var(--ink-faint); font-style: italic; }
+  .file-upload-btn {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; border: 1px dashed var(--border);
+    border-radius: 8px; padding: 6px 12px; font-size: 12px; color: var(--accent); cursor: pointer; font-weight: 600;
+  }
+  .file-upload-btn:hover { background: var(--accent-soft); }
+
+  .stagegrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: start; }
+  .stagecard { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden; }
+  .stagecard .shead { padding: 14px 16px 12px; border-bottom: 1px solid var(--border-soft); }
+  .stagecard .shead { cursor: pointer; }
+  .shead-top { display: flex; justify-content: space-between; align-items: center; }
+  .shead-top .stitle { display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .shead-top .chev-ico { color: var(--ink-faint); font-size: 10px; transition: transform 0.15s ease; flex: none; }
+  .stagecard.collapsed .shead-top .chev-ico { transform: rotate(-90deg); }
+  .stagecard.collapsed .flist { display: none; }
+  .shead-top h3 { font-family: var(--sans); font-size: 13.5px; font-weight: 700; }
+  .count { font-family: var(--mono); font-size: 11.5px; color: var(--ink-muted); }
+  .pbar { height: 5px; background: var(--border-soft); border-radius: 3px; margin-top: 9px; overflow: hidden; }
+  .pbar > i { display: block; height: 100%; background: var(--success); border-radius: 3px; }
+  .stagecard.notstarted .pbar > i { background: var(--ink-faint); }
+  .flist { padding: 6px 8px; display: flex; flex-direction: column; }
+  .frow { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 6px; font-size: 12.5px; }
+  .frow:hover { background: var(--surface-2); }
+  .frow .flabel { flex: 1; color: var(--ink); }
+  .frow.empty .flabel { color: var(--ink-faint); }
+  .frow .fval { font-size: 12px; color: var(--ink-muted); font-family: var(--mono); }
+  .frow .ftype { font-size: 9px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-faint); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; flex: none; }
+  .sfoot { padding: 10px 16px; border-top: 1px solid var(--border-soft); }
+
+  /* ---------- Admin config ---------- */
+  .admin-layout { display: grid; grid-template-columns: 230px 1fr; gap: 20px; align-items: start; }
+  .typelist { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; }
+  .typelist .titem { padding: 12px 16px; border-bottom: 1px solid var(--border-soft); cursor: pointer; }
+  .typelist .titem:last-child { border-bottom: none; }
+  .typelist .titem.active { background: var(--accent-soft); }
+  .typelist .titem .tname { font-weight: 700; font-size: 13.5px; }
+  .typelist .titem .tcount { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; }
+  .add-type { padding: 10px 16px; }
+
+  .stage-config { display: flex; flex-direction: column; gap: 12px; }
+  .stage-row { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); }
+  .stage-row-head { display: flex; align-items: center; gap: 12px; padding: 13px 16px; }
+  .drag { color: var(--ink-faint); font-family: var(--mono); font-size: 13px; cursor: grab; }
+  .stage-row-head .sname { font-weight: 700; font-size: 14px; flex: 1; }
+  .stage-row-head .fcount { font-size: 12px; color: var(--ink-muted); }
+  .stage-fields { border-top: 1px solid var(--border-soft); padding: 10px 16px 14px 42px; display: flex; flex-direction: column; gap: 7px; }
+  .cfg-field { display: flex; align-items: center; gap: 10px; font-size: 12.5px; }
+  .cfg-field .fname { flex: 1; }
+  .type-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 4px; }
+  .type-badge.text { background: var(--accent-soft); color: var(--accent-ink); }
+  .type-badge.date { background: var(--plum-soft); color: var(--plum); }
+  .type-badge.checkbox { background: var(--success-soft); color: var(--success); }
+  .type-badge.currency { background: var(--warning-soft); color: var(--warning); }
+  .type-badge.file { background: var(--plum-soft); color: var(--plum); }
+  .type-badge.link { background: var(--border-soft); color: var(--ink-muted); }
+  .req { color: var(--critical); font-size: 11px; }
+  .cfg-subhead { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-muted); font-weight: 700; margin: 10px 0 2px; }
+  .cfg-subhead:first-child { margin-top: 0; }
+  .add-field-row { display: flex; gap: 8px; margin-top: 6px; }
+  .add-field-row input, .add-field-row select { border: 1px dashed var(--border); background: transparent; border-radius: 6px; padding: 6px 9px; font-size: 12px; color: var(--ink-muted); font-family: inherit; }
+  .add-field-row input { flex: 1; }
+
+  .section-note { font-size: 12px; color: var(--ink-faint); margin: 18px 0 8px; }
+
+  /* ---------- Close project ---------- */
+  .btn-close-project {
+    border: 1px solid var(--critical); color: var(--critical); background: transparent;
+    padding: 8px 14px; border-radius: 7px; font-size: 12.5px; font-weight: 700;
+  }
+  .btn-close-project:hover { background: var(--critical-soft); }
+  .tag-closed { background: var(--critical-soft); color: var(--critical); }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(15,20,17,0.45);
+    align-items: center; justify-content: center; z-index: 50; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px 26px; width: 420px; max-width: 100%; box-shadow: 0 8px 30px rgba(15,20,17,0.25);
+  }
+  .modal h3 { font-size: 17px; }
+  .modal .modal-sub { font-size: 12.5px; color: var(--ink-muted); margin: 5px 0 0; }
+  .modal .field label { display: flex; gap: 5px; }
+  .modal select {
+    width: 100%; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink);
+    border-radius: 6px; padding: 8px 9px; font-size: 13px; font-family: inherit; margin-bottom: 8px;
+  }
+  .modal textarea {
+    width: 100%; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink);
+    border-radius: 6px; padding: 8px 9px; font-size: 13px; font-family: inherit; resize: vertical;
+  }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .btn-critical { background: var(--critical); border-color: var(--critical); color: #fff; }
+  .btn-critical:hover:not(:disabled) { filter: brightness(0.92); }
+  .btn-critical:disabled { opacity: 0.45; cursor: not-allowed; }
+</style>
+
+<div class="app">
+  <nav class="sidebar">
+    <div class="brand"><span class="mark">Docket</span><span class="sub">Eviction Case Mgmt</span></div>
+    <div class="nav">
+      <div class="nav-label">Workspace</div>
+      <button class="nav-btn" data-view="login"><span class="ico">&#8674;</span>Login</button>
+      <button class="nav-btn active" data-view="dashboard"><span class="ico">&#9635;</span>Projects</button>
+      <button class="nav-btn" data-view="detail"><span class="ico">&#8801;</span>Project Detail</button>
+      <button class="nav-btn" data-view="admin"><span class="ico">&#9881;</span>Configuration</button>
+    </div>
+    <div class="sidebar-foot">
+      <div class="who">
+        <div class="avatar">M</div>
+        <div>
+          <div class="name">Moshe G.</div>
+          <div class="role">Administrator</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- LOGIN VIEW -->
+    <section class="view" id="view-login">
+      <div class="login-wrap" style="min-height: 70vh;">
+        <div class="login-card">
+          <div class="login-mark">Docket</div>
+          <div class="login-tag">Eviction Case Management</div>
+          <div class="login-rule"></div>
+          <div class="field"><label for="email">Email</label><input id="email" type="email" value="moshe@bhmsmanagement.com" /></div>
+          <div class="field"><label for="pass">Password</label><input id="pass" type="password" value="••••••••••" /></div>
+          <button class="btn btn-primary">Sign in</button>
+          <div class="login-foot">Forgot password? Contact your administrator.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DASHBOARD VIEW -->
+    <section class="view active" id="view-dashboard">
+      <div class="pagehead">
+        <div>
+          <h1>Projects</h1>
+          <div class="desc">12 open cases &middot; 3 awaiting court date</div>
+        </div>
+        <button class="btn btn-primary">+ New Project</button>
+      </div>
+
+      <div class="toolbar">
+        <div class="chip-filter">
+          <button class="active">All</button>
+          <button>NP</button>
+          <button>Holdover</button>
+        </div>
+        <div class="search"><input placeholder="Search by address, tenant, or docket #&hellip;" /></div>
+      </div>
+
+      <div class="plist">
+
+        <div class="prow" onclick="showView('detail')">
+          <div class="primary">
+            <div class="addr">142 Grand St, Newburgh, NY 12550</div>
+            <div class="sub">Tenant: R. Alvarez &middot; <span class="mono">DOCKET-0142</span></div>
+          </div>
+          <span class="tag tag-np">NP</span>
+          <div class="segwrap">
+            <div class="segbar" title="4 of 7 stages complete">
+              <span class="seg done" title="Intake"></span>
+              <span class="seg done" title="Verification"></span>
+              <span class="seg done" title="Notice"></span>
+              <span class="seg done" title="Petition &amp; NOP"></span>
+              <span class="seg active" title="Court Prep"></span>
+              <span class="seg" title="Billing"></span>
+              <span class="seg" title="Closing"></span>
+            </div>
+            <div class="lbl">4 / 7 stages</div>
+          </div>
+          <span class="stagepill warn">Court Prep</span>
+          <span class="chev">&rsaquo;</span>
+        </div>
+
+        <div class="prow">
+          <div class="primary">
+            <div class="addr">88 Liberty St, Poughkeepsie, NY 12601</div>
+            <div class="sub">Tenant: D. Chaim &middot; <span class="mono">DOCKET-0138</span></div>
+          </div>
+          <span class="tag tag-holdover">Holdover</span>
+          <div class="segwrap">
+            <div class="segbar" title="2 of 6 stages complete">
+              <span class="seg done" title="Intake"></span>
+              <span class="seg done" title="Verification"></span>
+              <span class="seg active" title="Notice of Termination"></span>
+              <span class="seg" title="Petition &amp; GCEN"></span>
+              <span class="seg" title="Court Prep"></span>
+              <span class="seg" title="Closing"></span>
+            </div>
+            <div class="lbl">2 / 6 stages</div>
+          </div>
+          <span class="stagepill warn">Notice Service</span>
+          <span class="chev">&rsaquo;</span>
+        </div>
+
+        <div class="prow">
+          <div class="primary">
+            <div class="addr">27 Mill Rd, Unit 3B, Kingston, NY 12401</div>
+            <div class="sub">Tenant: M. Fischer &middot; <span class="mono">DOCKET-0129</span></div>
+          </div>
+          <span class="tag tag-holdover">Holdover</span>
+          <div class="segwrap">
+            <div class="segbar" title="5 of 6 stages complete">
+              <span class="seg done" title="Intake"></span>
+              <span class="seg done" title="Verification"></span>
+              <span class="seg done" title="Notice of Termination"></span>
+              <span class="seg done" title="Petition &amp; GCEN"></span>
+              <span class="seg done" title="Court Prep"></span>
+              <span class="seg active" title="Closing"></span>
+            </div>
+            <div class="lbl">5 / 6 stages</div>
+          </div>
+          <span class="stagepill ok">Billing</span>
+          <span class="chev">&rsaquo;</span>
+        </div>
+
+        <div class="prow">
+          <div class="primary">
+            <div class="addr">610 Delancey Ave, Newburgh, NY 12550</div>
+            <div class="sub">Tenant: S. Okafor &middot; <span class="mono">DOCKET-0151</span></div>
+          </div>
+          <span class="tag tag-np">NP</span>
+          <div class="segwrap">
+            <div class="segbar" title="1 of 7 stages complete">
+              <span class="seg done" title="Intake"></span>
+              <span class="seg active" title="Verification"></span>
+              <span class="seg" title="Notice"></span>
+              <span class="seg" title="Petition &amp; NOP"></span>
+              <span class="seg" title="Court Prep"></span>
+              <span class="seg" title="Billing"></span>
+              <span class="seg" title="Closing"></span>
+            </div>
+            <div class="lbl">1 / 7 stages</div>
+          </div>
+          <span class="stagepill crit">Court date overdue</span>
+          <span class="chev">&rsaquo;</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PROJECT DETAIL VIEW -->
+    <section class="view" id="view-detail">
+      <a class="backlink" href="#" onclick="showView('dashboard'); return false;">&larr; All Projects</a>
+
+      <div class="case-head">
+        <div>
+          <h1>142 Grand St, Newburgh, NY 12550</h1>
+          <div class="case-meta" id="case-meta">
+            <span class="tag tag-np">NP &middot; Non-Payment</span>
+            <span class="mono">DOCKET-0142</span>
+            <span class="mono">Opened Jun 14, 2026</span>
+          </div>
+        </div>
+        <div class="overall">
+          <div>
+            <div style="font-size:12px; color:var(--ink-muted); text-align:right;">Overall progress</div>
+            <div style="font-size:13px; font-weight:700; text-align:right;" class="mono">31 / 54 fields</div>
+          </div>
+          <div class="ring">
+            <svg width="54" height="54" viewBox="0 0 54 54">
+              <circle cx="27" cy="27" r="23" fill="none" stroke="var(--border-soft)" stroke-width="6"/>
+              <circle cx="27" cy="27" r="23" fill="none" stroke="var(--success)" stroke-width="6" stroke-linecap="round" stroke-dasharray="144.5" stroke-dashoffset="60"/>
+            </svg>
+            <div class="pct">58%</div>
+          </div>
+          <button class="btn btn-close-project" id="btn-close-project">Close Project</button>
+        </div>
+      </div>
+
+      <div class="modal-overlay" id="close-modal-overlay">
+        <div class="modal" role="dialog" aria-labelledby="close-modal-title" aria-modal="true">
+          <h3 id="close-modal-title">Close this project?</h3>
+          <p class="modal-sub">142 Grand St, Newburgh, NY 12550 &middot; <span class="mono">DOCKET-0142</span></p>
+          <div class="field" style="margin-top:16px;">
+            <label for="close-reason">Reason for closing <span class="req">*</span></label>
+            <select id="close-reason-preset">
+              <option value="">Select a reason&hellip;</option>
+              <option>Balance paid in full</option>
+              <option>Tenant vacated</option>
+              <option>Case dismissed</option>
+              <option>Settled outside of court</option>
+              <option value="__other">Other &mdash; specify below</option>
+            </select>
+            <textarea id="close-reason-detail" rows="3" placeholder="Add detail&hellip;"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-sm" id="btn-close-modal-cancel">Cancel</button>
+            <button class="btn btn-sm btn-critical" id="btn-close-modal-confirm" disabled>Close Project</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-overlay" id="contact-modal-overlay">
+        <div class="modal contact-modal" role="dialog" aria-labelledby="contact-modal-title" aria-modal="true">
+          <div class="cm-head">
+            <div class="cm-avatar">B</div>
+            <div class="cm-title">
+              <h3 id="contact-modal-title">BHMS Management LLC</h3>
+              <span class="cc-role">Owner</span>
+            </div>
+          </div>
+          <dl>
+            <dt>Phone</dt><dd class="mono">(845) 555-0199</dd>
+            <dt>Email</dt><dd class="mono">contact@bhmsmanagement.com</dd>
+            <dt>Company</dt><dd>BHMS Management LLC</dd>
+            <dt>Mailing Address</dt><dd>210 Broadway, Suite 4, Newburgh, NY 12550</dd>
+            <dt>Notes</dt><dd>Prefers email over phone; billing contact for 4 other properties.</dd>
+          </dl>
+          <div class="cm-linked">Linked to <strong>3 active projects</strong> as Owner.</div>
+          <div class="modal-actions">
+            <button class="btn btn-sm" id="btn-contact-modal-close">Close</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="intake-panel" id="intake-panel">
+        <div class="ihead">
+          <button class="ihead-toggle" id="btn-toggle-intake" aria-expanded="true">
+            <span class="chev-ico">&#9662;</span>
+            <h3>Intake Information</h3>
+            <span class="isummary">29 fields &middot; 27 complete</span>
+          </button>
+          <div class="view-actions"><button class="btn btn-sm" id="btn-edit-intake">Edit</button></div>
+          <div class="edit-actions">
+            <button class="btn btn-sm" id="btn-cancel-intake">Cancel</button>
+            <button class="btn btn-primary btn-sm" id="btn-save-intake">Save changes</button>
+          </div>
+        </div>
+        <div class="editing-note">Editing intake — 29 fields across 5 groups</div>
+
+        <div class="ibody" id="intake-body">
+        <div class="igroup">
+          <div class="igroup-title">Contacts</div>
+          <div class="igrid cols-1">
+            <div class="ifield">
+              <div class="k">Landlord / Owner</div>
+              <div class="v-view">
+                <div class="contact-card">
+                  <div class="cc-avatar">B</div>
+                  <div class="cc-info">
+                    <div class="cc-name">BHMS Management LLC <span class="cc-role">Owner</span></div>
+                    <div class="cc-detail mono">&#9742; (845) 555-0199</div>
+                    <div class="cc-detail mono">&#9993; contact@bhmsmanagement.com</div>
+                  </div>
+                  <button class="cc-view btn btn-sm" id="btn-view-contact">View</button>
+                </div>
+              </div>
+              <div class="v-edit">
+                <div class="contact-card">
+                  <div class="cc-avatar">B</div>
+                  <div class="cc-info">
+                    <div class="cc-name">BHMS Management LLC <span class="cc-role">Owner</span></div>
+                    <div class="cc-detail mono">&#9742; (845) 555-0199</div>
+                    <div class="cc-detail mono">&#9993; contact@bhmsmanagement.com</div>
+                  </div>
+                  <button type="button" class="cc-remove" title="Remove contact">&times;</button>
+                </div>
+                <span class="chip-add" style="margin-top:6px;"><input placeholder="+ Search contacts to replace&hellip;" /></span>
+                <div class="field-hint">Editing changes which contact is linked — not the contact's own details. To fix a phone/email, edit the contact record directly.</div>
+              </div>
+            </div>
+            <div class="ifield">
+              <div class="k">Tenant(s) on Lease</div>
+              <div class="v-view chiprow"><span class="chip">R. Alvarez<span class="rm">&times;</span></span><span class="chip">J. Alvarez<span class="rm">&times;</span></span></div>
+              <div class="v-edit chiprow">
+                <span class="chip">R. Alvarez<span class="rm">&times;</span></span>
+                <span class="chip">J. Alvarez<span class="rm">&times;</span></span>
+                <span class="chip-add"><input placeholder="+ Add tenant&hellip;" /></span>
+              </div>
+            </div>
+            <div class="ifield">
+              <div class="k">Occupants 18+ Not on Lease</div>
+              <div class="v-view chiprow"><span style="color:var(--ink-faint)">&mdash; none listed</span></div>
+              <div class="v-edit chiprow">
+                <span class="chip-add"><input placeholder="+ Add occupant&hellip;" /></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="igroup">
+          <div class="igroup-title">Case &amp; Lease</div>
+          <div class="igrid">
+            <div class="ifield"><div class="k">Tenancy Start Date</div><div class="v-view v mono">03/01/2023</div><div class="v-edit"><input type="date" value="2023-03-01" /></div></div>
+            <div class="ifield"><div class="k">Length of Tenancy</div><div class="v-view v">3 yrs, 2 mo</div><div class="v-edit"><input type="text" value="3 yrs, 2 mo" /></div></div>
+            <div class="ifield"><div class="k">Monthly Rent Amount</div><div class="v-view v mono">$1,850.00</div><div class="v-edit"><input class="curr" type="text" value="$1,850.00" /></div></div>
+            <div class="ifield"><div class="k">Total Rent Balance Owed</div><div class="v-view v mono">$5,550.00</div><div class="v-edit"><input class="curr" type="text" value="$5,550.00" /></div></div>
+            <div class="ifield" style="grid-column: span 2;">
+              <div class="k">Lease Agreement Attached</div>
+              <div class="v-view"><span class="file-pill"><span class="file-ico">&#128196;</span><span class="file-name">Lease_Alvarez_142Grand.pdf</span><span class="file-meta">240 KB</span></span></div>
+              <div class="v-edit">
+                <span class="file-pill editing"><span class="file-ico">&#128196;</span><span class="file-name">Lease_Alvarez_142Grand.pdf</span><button type="button" class="file-remove">&times;</button></span>
+                <label class="file-upload-btn">Replace file<input type="file" hidden /></label>
+              </div>
+            </div>
+            <div class="ifield checkfield"><span class="box on">&#10003;</span><div class="k">Ledger Attached</div></div>
+          </div>
+        </div>
+
+        <div class="igroup">
+          <div class="igroup-title">Property</div>
+          <div class="igrid">
+            <div class="ifield"><div class="k">Property Street Address</div><div class="v-view v">142 Grand St</div><div class="v-edit"><input type="text" value="142 Grand St" /></div></div>
+            <div class="ifield"><div class="k">Apartment/Unit #</div><div class="v-view v">3</div><div class="v-edit"><input type="text" value="3" /></div></div>
+            <div class="ifield"><div class="k">Floor Number</div><div class="v-view v">2</div><div class="v-edit"><input type="text" value="2" /></div></div>
+            <div class="ifield"><div class="k">Property City</div><div class="v-view v">Newburgh</div><div class="v-edit"><input type="text" value="Newburgh" /></div></div>
+            <div class="ifield"><div class="k">Property State</div><div class="v-view v">NY</div><div class="v-edit"><input type="text" value="NY" /></div></div>
+            <div class="ifield"><div class="k">Property Zip</div><div class="v-view v mono">12550</div><div class="v-edit"><input type="text" value="12550" /></div></div>
+            <div class="ifield"><div class="k">Additional Property Access Instructions</div><div class="v-view v">Buzz #3, side entrance</div><div class="v-edit"><input type="text" value="Buzz #3, side entrance" /></div></div>
+            <div class="ifield" style="grid-column: span 2;">
+              <div class="k">Property Management Agreement Attached</div>
+              <div class="v-view"><span class="file-empty">No file attached</span></div>
+              <div class="v-edit"><label class="file-upload-btn">+ Upload file<input type="file" hidden /></label></div>
+            </div>
+            <div class="ifield checkfield"><span class="box on">&#10003;</span><div class="k">Access: Straightforward</div></div>
+            <div class="ifield checkfield"><span class="box on">&#10003;</span><div class="k">Active Rental Permit (Newburgh)</div></div>
+          </div>
+        </div>
+
+        <div class="igroup">
+          <div class="igroup-title">Submitted By</div>
+          <div class="igrid">
+            <div class="ifield"><div class="k">Name</div><div class="v-view v">Moshe G.</div><div class="v-edit"><input type="text" value="Moshe G." /></div></div>
+            <div class="ifield"><div class="k">Title</div><div class="v-view v">Case Manager</div><div class="v-edit"><input type="text" value="Case Manager" /></div></div>
+            <div class="ifield"><div class="k">Company</div><div class="v-view v">BHMS Management</div><div class="v-edit"><input type="text" value="BHMS Management" /></div></div>
+            <div class="ifield"><div class="k">Phone</div><div class="v-view v mono">(845) 555-0148</div><div class="v-edit"><input type="text" value="(845) 555-0148" /></div></div>
+            <div class="ifield"><div class="k">Email</div><div class="v-view v mono">moshe@bhmsmanagement.com</div><div class="v-edit"><input type="text" value="moshe@bhmsmanagement.com" /></div></div>
+            <div class="ifield"><div class="k">Date</div><div class="v-view v mono">06/14/2026</div><div class="v-edit"><input type="date" value="2026-06-14" /></div></div>
+          </div>
+        </div>
+
+        <div class="igroup">
+          <div class="igroup-title">Case Flags &amp; Type</div>
+          <div class="igrid cols-3">
+            <div class="ifield checkfield"><span class="box">&nbsp;</span><div class="k">Marked Personal &amp; Confidential</div></div>
+            <div class="ifield"><div class="k">Entry Point</div><div class="v-view v">Referral</div><div class="v-edit"><input type="text" value="Referral" /></div></div>
+            <div class="ifield">
+              <div class="k">Evictions Type</div>
+              <div class="v-view"><span class="tag tag-np">NP &middot; Non-Payment</span></div>
+              <div class="v-edit"><select><option selected>NP &mdash; Non-Payment</option><option>Holdover</option></select></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="intake-done-row">
+          <span class="box on">&#10003;</span>
+          <div class="k">Intake Done</div>
+        </div>
+        </div>
+      </div>
+
+      <div class="section-note">Stages &middot; tracked independently, any can be worked in parallel</div>
+      <div class="stagegrid">
+
+        <div class="stagecard collapsed">
+          <div class="shead">
+            <div class="shead-top"><span class="stitle"><span class="chev-ico">&#9662;</span><h3>Intake</h3></span><span class="count">6/6</span></div>
+            <div class="pbar"><i style="width:100%"></i></div>
+          </div>
+          <div class="flist">
+            <div class="frow"><span class="box on">&#10003;</span><span class="flabel">Lease agreement attached</span></div>
+            <div class="frow"><span class="box on">&#10003;</span><span class="flabel">Ledger attached</span></div>
+            <div class="frow"><span class="box on">&#10003;</span><span class="flabel">Property access instructions</span></div>
+            <div class="frow"><span class="flabel">Entry point</span><span class="fval">Referral</span><span class="ftype">text</span></div>
+            <div class="frow"><span class="box on">&#10003;</span><span class="flabel">Marked personal &amp; confidential</span></div>
+            <div class="frow"><span class="box on">&#10003;</span><span class="flabel">Intake done</span></div>
+          </div>
+        </div>
+
+        <div class="stagecard collapsed">
+          <div class="shead">
+            <div class="shead-top"><span class="stitle"><span class="chev-ico">&#9662;</span><h3>Verification</h3></span><span class="count">5/5</span></div>
+            <div class="pbar"><i style="width:100%"></i></div>
+          </div>
+          <div class="flist">
+            <div class="frow"><span class="box on">&#10003;</span><span class="flabel">Address verified (Google Maps)</span></div>
+            <div class="frow"><span class="box on">&#10003;</span><span class="flabel">County / town confirmed</span></div>
+            <div class="frow"><span class="box on">&#10003;</span><span class="flabel">Rent amount owed confirmed</span></div>
+            <div class="frow"><span class="box on">&#10003;</span><span class="flabel">Occupants 18+ confirmed</span></div>
+            <div class="frow"><span class="box on">&#10003;</span><span class="flabel">Verification done</span></div>
+          </div>
+        </div>
+
+        <div class="stagecard">
+          <div class="shead">
+            <div class="shead-top"><span class="stitle"><span class="chev-ico">&#9662;</span><h3>5-Day Notice</h3></span><span class="count">3/5</span></div>
+            <div class="pbar"><i style="width:60%"></i></div>
+          </div>
+          <div class="flist">
+            <div class="frow"><span class="box on">&#10003;</span><span class="flabel">Notice prepared</span></div>
+            <div class="frow"><span class="box on">&#10003;</span><span class="flabel">Sent certified &amp; regular mail</span></div>
+            <div class="frow"><span class="flabel">Date served</span><span class="fval">06/18/2026</span><span class="ftype">date</span></div>
+            <div class="frow empty"><span class="box"></span><span class="flabel">Affidavit attached to file</span></div>
+            <div class="frow empty"><span class="box"></span><span class="flabel">5-Day stage done</span></div>
+          </div>
+        </div>
+
+        <div class="stagecard">
+          <div class="shead">
+            <div class="shead-top"><span class="stitle"><span class="chev-ico">&#9662;</span><h3>Petition &amp; NOP Filing</h3></span><span class="count">2/6</span></div>
+            <div class="pbar"><i style="width:33%"></i></div>
+          </div>
+          <div class="flist">
+            <div class="frow"><span class="box on">&#10003;</span><span class="flabel">GCE filled out correctly</span></div>
+            <div class="frow"><span class="box on">&#10003;</span><span class="flabel">Sent to landlord for signature</span></div>
+            <div class="frow empty"><span class="box"></span><span class="flabel">Petition notarized</span></div>
+            <div class="frow empty"><span class="box"></span><span class="flabel">NOP requested from attorney</span></div>
+            <div class="frow empty"><span class="box"></span><span class="flabel">Original petition on file</span></div>
+            <div class="frow empty"><span class="box"></span><span class="flabel">Petition &amp; NOP done</span></div>
+          </div>
+        </div>
+
+        <div class="stagecard notstarted">
+          <div class="shead">
+            <div class="shead-top"><span class="stitle"><span class="chev-ico">&#9662;</span><h3>Court Prep</h3></span><span class="count">0/5</span></div>
+            <div class="pbar"><i style="width:0%"></i></div>
+          </div>
+          <div class="flist">
+            <div class="frow empty"><span class="flabel">Court date</span><span class="fval">&mdash;</span><span class="ftype">date</span></div>
+            <div class="frow empty"><span class="box"></span><span class="flabel">Court date confirmed w/ attorney</span></div>
+            <div class="frow empty"><span class="box"></span><span class="flabel">Court fee paid</span></div>
+            <div class="frow empty"><span class="box"></span><span class="flabel">Envelope prepared</span></div>
+            <div class="frow empty"><span class="box"></span><span class="flabel">FedEx label prepared</span></div>
+          </div>
+        </div>
+
+        <div class="stagecard notstarted">
+          <div class="shead">
+            <div class="shead-top"><span class="stitle"><span class="chev-ico">&#9662;</span><h3>Billing</h3></span><span class="count">1/4</span></div>
+            <div class="pbar"><i style="width:25%"></i></div>
+          </div>
+          <div class="flist">
+            <div class="frow"><span class="box on">&#10003;</span><span class="flabel">Invoice sent</span></div>
+            <div class="frow empty"><span class="box"></span><span class="flabel">Payment 1 received</span></div>
+            <div class="frow empty"><span class="box"></span><span class="flabel">Payment 2 received</span></div>
+            <div class="frow empty"><span class="box"></span><span class="flabel">Billing done</span></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ADMIN CONFIG VIEW -->
+    <section class="view" id="view-admin">
+      <div class="pagehead">
+        <div>
+          <h1>Configuration</h1>
+          <div class="desc">Manage project types, their stages, and the fields collected at each stage.</div>
+        </div>
+      </div>
+
+      <div class="admin-layout">
+        <div class="typelist">
+          <div class="titem active">
+            <div class="tname">NP &middot; Non-Payment</div>
+            <div class="tcount">7 stages &middot; 54 fields</div>
+          </div>
+          <div class="titem">
+            <div class="tname">Holdover</div>
+            <div class="tcount">6 stages &middot; 28 fields</div>
+          </div>
+          <div class="add-type"><button class="btn btn-sm" style="width:100%; justify-content:center;">+ Add Project Type</button></div>
+        </div>
+
+        <div class="stage-config">
+
+          <div class="stage-row">
+            <div class="stage-row-head">
+              <span class="drag">&#8942;&#8942;</span>
+              <span class="sname">1. Intake</span>
+              <span class="fcount">29 fields</span>
+              <button class="btn btn-sm">Edit</button>
+            </div>
+            <div class="stage-fields">
+              <div class="cfg-subhead">Contacts</div>
+              <div class="cfg-field"><span class="type-badge link">Link</span><span class="fname">Landlord / Owner</span></div>
+              <div class="cfg-field"><span class="type-badge link">Link</span><span class="fname">Tenant(s) on Lease</span></div>
+              <div class="cfg-field"><span class="type-badge link">Link</span><span class="fname">Occupants 18+ Not on Lease</span></div>
+
+              <div class="cfg-subhead">Case &amp; Lease</div>
+              <div class="cfg-field"><span class="type-badge date">Date</span><span class="fname">Tenancy Start Date</span></div>
+              <div class="cfg-field"><span class="type-badge text">Text</span><span class="fname">Length of Tenancy</span></div>
+              <div class="cfg-field"><span class="type-badge currency">Currency</span><span class="fname">Monthly Rent Amount</span></div>
+              <div class="cfg-field"><span class="type-badge currency">Currency</span><span class="fname">Total Rent Balance Owed</span></div>
+              <div class="cfg-field"><span class="type-badge file">File</span><span class="fname">Lease Agreement Attached</span></div>
+              <div class="cfg-field"><span class="type-badge checkbox">Checkbox</span><span class="fname">Ledger Attached</span></div>
+
+              <div class="cfg-subhead">Property</div>
+              <div class="cfg-field"><span class="type-badge text">Text</span><span class="fname">Property Street Address</span></div>
+              <div class="cfg-field"><span class="type-badge text">Text</span><span class="fname">Apartment/Unit #</span></div>
+              <div class="cfg-field"><span class="type-badge text">Text</span><span class="fname">Floor Number</span></div>
+              <div class="cfg-field"><span class="type-badge text">Text</span><span class="fname">Property City</span></div>
+              <div class="cfg-field"><span class="type-badge text">Text</span><span class="fname">Property State</span></div>
+              <div class="cfg-field"><span class="type-badge text">Text</span><span class="fname">Property Zip</span></div>
+              <div class="cfg-field"><span class="type-badge file">File</span><span class="fname">Property Management Agreement Attached</span></div>
+              <div class="cfg-field"><span class="type-badge checkbox">Checkbox</span><span class="fname">Property Access: Straightforward</span></div>
+              <div class="cfg-field"><span class="type-badge text">Text</span><span class="fname">Additional Property Access Instructions</span></div>
+              <div class="cfg-field"><span class="type-badge checkbox">Checkbox</span><span class="fname">Active Rental Permit (Albany/Newburgh/Syracuse)</span></div>
+
+              <div class="cfg-subhead">Submitted By</div>
+              <div class="cfg-field"><span class="type-badge text">Text</span><span class="fname">Name</span></div>
+              <div class="cfg-field"><span class="type-badge text">Text</span><span class="fname">Title</span></div>
+              <div class="cfg-field"><span class="type-badge text">Text</span><span class="fname">Company</span></div>
+              <div class="cfg-field"><span class="type-badge text">Text</span><span class="fname">Phone</span></div>
+              <div class="cfg-field"><span class="type-badge text">Text</span><span class="fname">Email</span></div>
+              <div class="cfg-field"><span class="type-badge date">Date</span><span class="fname">Date</span></div>
+
+              <div class="cfg-subhead">Case Flags &amp; Type</div>
+              <div class="cfg-field"><span class="type-badge checkbox">Checkbox</span><span class="fname">Marked Personal &amp; Confidential</span></div>
+              <div class="cfg-field"><span class="type-badge text">Text</span><span class="fname">Entry Point</span></div>
+              <div class="cfg-field"><span class="type-badge text">Select</span><span class="fname">Evictions Type (NP / Holdover)</span></div>
+
+              <div class="cfg-subhead">Boundary</div>
+              <div class="cfg-field"><span class="type-badge checkbox">Checkbox</span><span class="fname">Intake Done</span><span class="req">required</span></div>
+
+              <div class="add-field-row">
+                <input placeholder="New field label&hellip;" />
+                <select><option>Text</option><option>Date</option><option>Checkbox</option><option>Currency</option></select>
+                <button class="btn btn-sm">Add</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="stage-row">
+            <div class="stage-row-head">
+              <span class="drag">&#8942;&#8942;</span>
+              <span class="sname">2. Verification</span>
+              <span class="fcount">5 fields</span>
+              <button class="btn btn-sm">Edit</button>
+            </div>
+          </div>
+
+          <div class="stage-row">
+            <div class="stage-row-head">
+              <span class="drag">&#8942;&#8942;</span>
+              <span class="sname">3. 5-Day Notice</span>
+              <span class="fcount">5 fields</span>
+              <button class="btn btn-sm">Edit</button>
+            </div>
+          </div>
+
+          <div class="stage-row">
+            <div class="stage-row-head">
+              <span class="drag">&#8942;&#8942;</span>
+              <span class="sname">4. Petition &amp; NOP Filing</span>
+              <span class="fcount">6 fields</span>
+              <button class="btn btn-sm">Edit</button>
+            </div>
+          </div>
+
+          <div class="stage-row">
+            <div class="stage-row-head">
+              <span class="drag">&#8942;&#8942;</span>
+              <span class="sname">5. Court Prep</span>
+              <span class="fcount">5 fields</span>
+              <button class="btn btn-sm">Edit</button>
+            </div>
+          </div>
+
+          <div class="stage-row">
+            <div class="stage-row-head">
+              <span class="drag">&#8942;&#8942;</span>
+              <span class="sname">6. Billing</span>
+              <span class="fcount">4 fields</span>
+              <button class="btn btn-sm">Edit</button>
+            </div>
+          </div>
+
+          <div class="stage-row">
+            <div class="stage-row-head">
+              <span class="drag">&#8942;&#8942;</span>
+              <span class="sname">7. Closing</span>
+              <span class="fcount">2 fields</span>
+              <button class="btn btn-sm">Edit</button>
+            </div>
+          </div>
+
+          <button class="btn" style="align-self:flex-start;">+ Add Stage</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  function showView(name) {
+    document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+    document.getElementById('view-' + name).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.view === name);
+    });
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll('.nav-btn').forEach(function (b) {
+    b.addEventListener('click', function () { showView(b.dataset.view); });
+  });
+  document.querySelectorAll('.stagecard .shead').forEach(function (shead) {
+    shead.addEventListener('click', function () {
+      shead.closest('.stagecard').classList.toggle('collapsed');
+    });
+  });
+
+  document.querySelectorAll('.frow .box').forEach(function (box) {
+    box.addEventListener('click', function (e) {
+      e.stopPropagation();
+      box.classList.toggle('on');
+      box.textContent = box.classList.contains('on') ? '✓' : '';
+    });
+  });
+
+  // Intake panel edit mode
+  var intakePanel = document.getElementById('intake-panel');
+  function setIntakeEditing(on) {
+    intakePanel.classList.toggle('editing', on);
+  }
+  document.getElementById('btn-edit-intake').addEventListener('click', function () { setIntakeEditing(true); });
+  document.getElementById('btn-cancel-intake').addEventListener('click', function () { setIntakeEditing(false); });
+  document.getElementById('btn-save-intake').addEventListener('click', function () { setIntakeEditing(false); });
+
+  document.getElementById('btn-toggle-intake').addEventListener('click', function () {
+    var collapsing = !intakePanel.classList.contains('collapsed');
+    intakePanel.classList.toggle('collapsed', collapsing);
+    if (collapsing) setIntakeEditing(false);
+    this.setAttribute('aria-expanded', String(!collapsing));
+  });
+
+  intakePanel.querySelectorAll('.ifield.checkfield .box, .intake-done-row .box').forEach(function (box) {
+    box.addEventListener('click', function () {
+      if (!intakePanel.classList.contains('editing')) return;
+      box.classList.toggle('on');
+      box.innerHTML = box.classList.contains('on') ? '&#10003;' : '&nbsp;';
+    });
+  });
+
+  function wireChipRemove(chip) {
+    chip.querySelector('.rm').addEventListener('click', function () { chip.remove(); });
+  }
+  intakePanel.querySelectorAll('.chip').forEach(wireChipRemove);
+  intakePanel.querySelectorAll('.chip-add input').forEach(function (input) {
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && input.value.trim()) {
+        e.preventDefault();
+        var chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.innerHTML = input.value.trim() + ' <span class="rm">&times;</span>';
+        input.closest('.chip-add').insertAdjacentElement('beforebegin', chip);
+        wireChipRemove(chip);
+        input.value = '';
+      }
+    });
+  });
+
+  // Owner/landlord contact card — remove link (mock)
+  intakePanel.querySelectorAll('.cc-remove').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var card = btn.closest('.contact-card');
+      var hint = document.createElement('span');
+      hint.className = 'file-empty';
+      hint.textContent = 'No contact linked';
+      card.replaceWith(hint);
+    });
+  });
+
+  // File upload fields — remove / replace / pick a new file (mock)
+  function wireFileInput(input) {
+    if (!input) return;
+    input.addEventListener('change', function () {
+      if (!input.files || !input.files[0]) return;
+      var name = input.files[0].name;
+      var field = input.closest('.ifield');
+      var kb = Math.max(1, Math.round(input.files[0].size / 1024));
+      field.querySelector('.v-view').innerHTML =
+        '<span class="file-pill"><span class="file-ico">&#128196;</span><span class="file-name">' + name + '</span><span class="file-meta">' + kb + ' KB</span></span>';
+      field.querySelector('.v-edit').innerHTML =
+        '<span class="file-pill editing"><span class="file-ico">&#128196;</span><span class="file-name">' + name + '</span><button type="button" class="file-remove">&times;</button></span>' +
+        '<label class="file-upload-btn">Replace file<input type="file" hidden /></label>';
+      wireFileRemove(field.querySelector('.file-remove'));
+      wireFileInput(field.querySelector('.file-upload-btn input'));
+    });
+  }
+  function wireFileRemove(btn) {
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var field = btn.closest('.ifield');
+      field.querySelector('.v-view').innerHTML = '<span class="file-empty">No file attached</span>';
+      field.querySelector('.v-edit').innerHTML = '<label class="file-upload-btn">+ Upload file<input type="file" hidden /></label>';
+      wireFileInput(field.querySelector('.file-upload-btn input'));
+    });
+  }
+  intakePanel.querySelectorAll('.file-upload-btn input').forEach(wireFileInput);
+  intakePanel.querySelectorAll('.file-remove').forEach(wireFileRemove);
+
+  // Close project modal — reason required before confirming
+  var closeOverlay = document.getElementById('close-modal-overlay');
+  var closeConfirmBtn = document.getElementById('btn-close-modal-confirm');
+  var closeReasonPreset = document.getElementById('close-reason-preset');
+  var closeReasonDetail = document.getElementById('close-reason-detail');
+
+  function reasonProvided() {
+    return closeReasonPreset.value !== '' || closeReasonDetail.value.trim() !== '';
+  }
+  function refreshCloseConfirm() { closeConfirmBtn.disabled = !reasonProvided(); }
+  closeReasonPreset.addEventListener('change', refreshCloseConfirm);
+  closeReasonDetail.addEventListener('input', refreshCloseConfirm);
+
+  document.getElementById('btn-close-project').addEventListener('click', function () {
+    closeReasonPreset.value = '';
+    closeReasonDetail.value = '';
+    refreshCloseConfirm();
+    closeOverlay.classList.add('open');
+  });
+  document.getElementById('btn-close-modal-cancel').addEventListener('click', function () {
+    closeOverlay.classList.remove('open');
+  });
+  closeOverlay.addEventListener('click', function (e) {
+    if (e.target === closeOverlay) closeOverlay.classList.remove('open');
+  });
+  closeConfirmBtn.addEventListener('click', function () {
+    if (closeConfirmBtn.disabled) return;
+    closeOverlay.classList.remove('open');
+    var meta = document.getElementById('case-meta');
+    if (!meta.querySelector('.tag-closed')) {
+      var badge = document.createElement('span');
+      badge.className = 'tag tag-closed';
+      badge.textContent = 'Closed';
+      meta.appendChild(badge);
+    }
+    var closeBtn = document.getElementById('btn-close-project');
+    closeBtn.textContent = 'Reopen Project';
+  });
+
+  // Contact detail modal
+  var contactOverlay = document.getElementById('contact-modal-overlay');
+  document.getElementById('btn-view-contact').addEventListener('click', function () {
+    contactOverlay.classList.add('open');
+  });
+  document.getElementById('btn-contact-modal-close').addEventListener('click', function () {
+    contactOverlay.classList.remove('open');
+  });
+  contactOverlay.addEventListener('click', function (e) {
+    if (e.target === contactOverlay) contactOverlay.classList.remove('open');
+  });
+</script>
