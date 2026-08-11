@@ -199,7 +199,7 @@ export function IntakePanel({
   const missingLabels = project.intakeMissing.map((key) => CORE_INTAKE_FIELD_LABELS[key] ?? key);
 
   return (
-    <section className="intake-panel">
+    <section className={`intake-panel${editing ? ' editing' : ''}`}>
       <div className="ihead">
         <button className="ihead-toggle" onClick={() => setCollapsed((prior) => !prior)}>
           <span className="chev-ico">{collapsed ? '▸' : '▾'}</span>
