@@ -29,7 +29,7 @@ authRouter.post('/login', async (req, res) => {
   const ok = await bcrypt.compare(parsed.data.password, user.passwordHash);
   if (!ok) return invalid();
 
-  setAuthCookie(res, signToken(user.id));
+  setAuthCookie(req, res, signToken(user.id));
   res.json({ id: user.id, name: user.name, email: user.email, active: user.active });
 });
 

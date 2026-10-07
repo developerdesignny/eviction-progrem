@@ -4,7 +4,10 @@
 // (Project). That is why no relation declares onDelete: Cascade.
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // "native" covers local dev (Windows here) and the Netlify build image;
+  // rhel-openssl-3.0.x is the AWS Lambda runtime that Netlify Functions run on.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
