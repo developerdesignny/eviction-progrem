@@ -203,7 +203,9 @@ export const CORE_INTAKE_FIELD_LABELS: Record<string, string> = {
   submittedByDate: 'Submitted By (Date)',
 };
 
-export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
+// 4 MB: Netlify Functions cap a request body at 6 MB, and binary is base64-encoded in
+// transit (about 4.5 MB effective). Raise this only after moving files off the function.
+export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 
 export const ALLOWED_UPLOAD_MIME = [
   'application/pdf',

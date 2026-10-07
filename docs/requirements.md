@@ -79,14 +79,14 @@ A single rule across the whole app — no record has a delete path. Data only ev
 - **DB:** PostgreSQL
 - **BE:** Node.js + Express + TypeScript, Prisma ORM
 - **FE:** React + TypeScript (Vite)
-- Chosen for easy hosting (Render, no Dockerfile required) over ASP.NET Core, which the user found harder to host.
-- **Single deployable project** — frontend and backend live in one repo with one `package.json`, build, and start command. In production Express serves the built React bundle as static files and handles `/api/*` itself; there is no second service. **Hosted on Render as one Web Service + one Postgres instance.**
+- Chosen for easy hosting (originally Render, now Netlify; no Dockerfile required) over ASP.NET Core, which the user found harder to host.
+- **Single deployable project** — frontend and backend live in one repo with one `package.json`, build, and start command. In production Express serves the built React bundle as static files and handles `/api/*` itself; there is no second service. **Hosted on Netlify: the built client on the CDN, the same Express app wrapped as one Netlify Function at `/api/*`, and Netlify Database (managed Postgres). See `docs/netlify-deployment.md`.**
   - Same-origin in production means **no CORS setup at all**, and the httpOnly JWT cookie works without `credentials`/domain juggling. In dev, the Vite server proxies `/api` to Express, so it's same-origin there too.
   - `src/shared/` holds types used by both sides (field types, API payloads) — one definition, no drift between client and server.
-  - Render gotcha: Render sets `NODE_ENV=production`, which makes `npm install` skip `devDependencies` — so build tooling (vite, typescript, prisma) goes in `dependencies`, or the build command installs with `--include=dev`.
+  - Hosting gotcha: production hosts often set `NODE_ENV=production`, which makes `npm install` skip `devDependencies`, so build tooling (vite, typescript, prisma) lives in `dependencies`.
 - **File storage:** uploaded files (Lease Agreement, Property Mgmt Agreement, etc.) are stored as `bytea` blobs directly in Postgres — no separate object storage service, simplest to host, fine at this app's document volume.
 - **Multi-tenant:** not for now — single org/firm. May be added later (an `Organization` table + `orgId` scoping); schema is not designed to block that addition, but it isn't built in yet.
-- **Environments:** local Postgres for testing, hosted Postgres for live — same Prisma migrations against both. A single `DB_TARGET=local|hosted` switch in `.env` selects which, and the app, migrations and Prisma Studio all follow it (resolved in `src/server/env.ts`, mirrored in `scripts/db-url.mjs` for the CLI). Local credentials are given as parts (`DB_USER`, `DB_PASSWORD`, optional `DB_HOST`/`DB_PORT`/`DB_NAME`/`DB_SCHEMA`) and assembled into the URL with the password percent-encoded, so symbols can't break it; `DATABASE_URL_LOCAL` still works as a whole-string fallback when `DB_USER` is unset. Hosted stays a full URL, since that is what Render provides. Every database command prints its target first, so a migration can't hit the wrong database unnoticed. On Render neither is set and the injected `DATABASE_URL` is used.
+- **Environments:** local Postgres for testing, hosted Postgres for live — same Prisma migrations against both. A single `DB_TARGET=local|hosted` switch in `.env` selects which, and the app, migrations and Prisma Studio all follow it (resolved in `src/server/env.ts`, mirrored in `scripts/db-url.mjs` for the CLI). Local credentials are given as parts (`DB_USER`, `DB_PASSWORD`, optional `DB_HOST`/`DB_PORT`/`DB_NAME`/`DB_SCHEMA`) and assembled into the URL with the password percent-encoded, so symbols can't break it; `DATABASE_URL_LOCAL` still works as a whole-string fallback when `DB_USER` is unset. Hosted stays a full URL, since that is what hosts provide. Every database command prints its target first, so a migration can't hit the wrong database unnoticed. On Netlify neither is set and the injected `NETLIFY_DB_URL` (or a `DATABASE_URL` site variable) is used.
 - **Migrations apply themselves on startup** (`AUTO_MIGRATE`, default on) via `prisma migrate deploy` — applies existing migration files only, never generates or drops. Authoring stays a deliberate local step (`npm run prisma:migrate`, commit the result). Startup aborts if a migration fails rather than serving against a mismatched schema.
 - **First user:** created at startup from `ADMIN_EMAIL` / `ADMIN_PASSWORD`, and only when no users exist yet — so a fresh deploy is signable-in with no shell access. There is no public signup; further users are added from Configuration → Users.
 - **Not seeded:** no stages, no fields. Sections B–H of `field-mapping.md` stay reference-only; the real stage list gets built in the Config screen.
@@ -114,7 +114,8 @@ EvictionProgrem/
   tsconfig.json         # client (Vite/React) + shared
   tsconfig.server.json  # server (Node/Express) + shared → emits dist/server
   vite.config.ts        # dev proxy /api → :3000; build → dist/public
-  render.yaml           # Render blueprint: 1 web service + 1 Postgres
+  netlify.toml          # Netlify build, publish dir, SPA fallback
+  netlify/functions/    # api.mts: the Express app as one function at /api/*
   .env / .env.example   # DB_TARGET switch, JWT_SECRET, ADMIN_*, AUTO_MIGRATE (.env gitignored)
   README.md             # setup, scripts, deploy
   scripts/
@@ -146,7 +147,7 @@ EvictionProgrem/
 | `npm run build` | `vite build` → `dist/public`, `tsc -p tsconfig.server.json` → `dist/server` |
 | `npm start` | `node dist/server/index.js` — serves API + static bundle + SPA fallback |
 
-**Render config:** Build `npm install && npm run build && npx prisma migrate deploy` · Start `npm start` · `DATABASE_URL` from the linked Postgres, `JWT_SECRET` generated.
+**Netlify config:** Build `npm run build:netlify` (Vite, `prisma generate`, `prisma migrate deploy`) · Publish `dist/public` · database URL injected by Netlify Database, `JWT_SECRET` / `ADMIN_*` set in the site env vars.
 
 ## Mockup status
 The app has been scaffolded and now implements all of the below — `docs/mockup.html` is

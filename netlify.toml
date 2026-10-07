@@ -1,0 +1,33 @@
+# Netlify: static client on the CDN + the Express API as one function at /api/*.
+# See docs/netlify-deployment.md for the reasoning and the first-deploy checklist.
+
+[build]
+  # Builds the React client, generates the Prisma client for the Lambda runtime, and
+  # applies pending Prisma migrations to the deploy's database before it goes live.
+  command = "npm run build:netlify"
+  publish = "dist/public"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  node_bundler = "esbuild"
+  # Prisma's client is generated code plus a native query engine; esbuild must not try
+  # to bundle it, and the generated .prisma/client folder has to ship with the function.
+  external_node_modules = ["@prisma/client"]
+  included_files = ["node_modules/.prisma/client/**"]
+
+# SPA fallback: every non-file, non-function path is a client route. The API function
+# declares its own /api/* path and is matched before this non-forced rewrite.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[dev]
+  # `netlify dev` runs Vite for the client and serves the function at /api/* itself,
+  # against the database in .env (DB_TARGET=local). `npm run dev` still works as before.
+  command = "npm run dev:client"
+  targetPort = 5173
+  port = 8888
+  framework = "#custom"

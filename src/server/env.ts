@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Minimal .env loader — avoids a dotenv dependency. Render injects real env vars,
+// Minimal .env loader (avoids a dotenv dependency). Netlify injects real env vars,
 // so the file is only expected locally. Mirrors scripts/db-url.mjs, which the
 // Prisma CLI wrapper uses, so the app and its migrations always agree on the target.
 function loadDotEnv() {
@@ -15,7 +15,7 @@ function loadDotEnv() {
     if (eq === -1) continue;
 
     const key = trimmed.slice(0, eq).trim();
-    // Real environment variables (Render, CI, the shell) always win over the file.
+    // Real environment variables (Netlify, CI, the shell) always win over the file.
     if (process.env[key] !== undefined) continue;
 
     let value = trimmed.slice(eq + 1).trim();
@@ -33,7 +33,7 @@ loadDotEnv();
 
 function required(name: string): string {
   const value = process.env[name];
-  if (!value) throw new Error(`Missing required environment variable: ${name}`);
+  if (!value) throw new Error(`Missing required environment variable: `);
   return value;
 }
 
@@ -65,8 +65,8 @@ function buildUrlFromParts(): string | null {
 /**
  * One switch decides which database everything talks to:
  *   1. DB_TARGET=local   → DB_USER/DB_PASSWORD/... parts, else DATABASE_URL_LOCAL
- *   2. DB_TARGET=hosted  → DATABASE_URL_HOSTED (Render hands out a whole URL)
- *   3. DATABASE_URL as-is → the Render path, where it is injected for us
+ *   2. DB_TARGET=hosted  -> DATABASE_URL_HOSTED (a hosted database, as one URL)
+ *   3. DATABASE_URL or NETLIFY_DB_URL as-is -> the Netlify path, injected for us
  */
 function resolveDatabase(): { url: string; target: string } {
   const target = (process.env.DB_TARGET ?? '').trim().toLowerCase();
@@ -98,7 +98,14 @@ function resolveDatabase(): { url: string; target: string } {
 
   if (target) throw new Error(`DB_TARGET must be "local" or "hosted" (got "${target}").`);
 
-  return { url: required('DATABASE_URL'), target: 'DATABASE_URL' };
+  // Netlify Database injects NETLIFY_DB_URL (the right branch for this deploy); an external
+  // Postgres pasted into the Netlify UI arrives as DATABASE_URL. Either works unchanged.
+  if (process.env.DATABASE_URL) return { url: process.env.DATABASE_URL, target: 'DATABASE_URL' };
+  if (process.env.NETLIFY_DB_URL) return { url: process.env.NETLIFY_DB_URL, target: 'NETLIFY_DB_URL' };
+  throw new Error(
+    'No database configured. Set DB_TARGET=local (with DB_USER and DB_PASSWORD) in .env, ' +
+      'or provide DATABASE_URL (or NETLIFY_DB_URL on Netlify).',
+  );
 }
 
 /** host/database only — never log a connection string with its password. */

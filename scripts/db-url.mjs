@@ -16,7 +16,7 @@ export function loadDotEnv(cwd = process.cwd()) {
     if (eq === -1) continue;
 
     const key = trimmed.slice(0, eq).trim();
-    // Real environment variables (Render, CI, the shell) always win over the file.
+    // Real environment variables (Netlify, CI, the shell) always win over the file.
     if (process.env[key] !== undefined) continue;
 
     let value = trimmed.slice(eq + 1).trim();
@@ -58,8 +58,8 @@ function buildUrlFromParts() {
 /**
  * Resolution order:
  *   1. DB_TARGET=local   → DB_USER/DB_PASSWORD/... parts, else DATABASE_URL_LOCAL
- *   2. DB_TARGET=hosted  → DATABASE_URL_HOSTED (Render hands out a whole URL)
- *   3. DATABASE_URL      → used as-is (this is the Render path)
+ *   2. DB_TARGET=hosted  -> DATABASE_URL_HOSTED (a hosted database, as one URL)
+ *   3. DATABASE_URL or NETLIFY_DB_URL -> used as-is (the Netlify path)
  * Throws with a useful message rather than silently connecting to the wrong database.
  */
 export function resolveDatabase() {
@@ -94,14 +94,14 @@ export function resolveDatabase() {
     throw new Error(`DB_TARGET must be "local" or "hosted" (got "${target}").`);
   }
 
-  const url = process.env.DATABASE_URL;
-  if (!url) {
-    throw new Error(
-      'No database configured. Set DB_TARGET=local (with DB_USER and DB_PASSWORD) in .env, ' +
-        'or provide DATABASE_URL.',
-    );
-  }
-  return { url, target: 'DATABASE_URL' };
+  // Netlify Database injects NETLIFY_DB_URL (the right branch for this deploy); an external
+  // Postgres pasted into the Netlify UI arrives as DATABASE_URL. Either works unchanged.
+  if (process.env.DATABASE_URL) return { url: process.env.DATABASE_URL, target: 'DATABASE_URL' };
+  if (process.env.NETLIFY_DB_URL) return { url: process.env.NETLIFY_DB_URL, target: 'NETLIFY_DB_URL' };
+  throw new Error(
+    'No database configured. Set DB_TARGET=local (with DB_USER and DB_PASSWORD) in .env, ' +
+      'or provide DATABASE_URL (or NETLIFY_DB_URL on Netlify).',
+  );
 }
 
 /** host/database only — never print a connection string with its password in it. */

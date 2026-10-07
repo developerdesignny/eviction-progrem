@@ -14,11 +14,13 @@ export function signToken(userId: string): string {
   return jwt.sign({ sub: userId }, env.jwtSecret, { expiresIn: TOKEN_TTL_SECONDS });
 }
 
-export function setAuthCookie(res: Response, token: string) {
+export function setAuthCookie(req: Request, res: Response, token: string) {
   res.cookie(AUTH_COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: env.isProduction,
+    // Secure whenever the request itself came over HTTPS (always the case on Netlify,
+    // which the function reports via X-Forwarded-Proto); plain http://localhost works.
+    secure: req.secure,
     maxAge: TOKEN_TTL_SECONDS * 1000,
     path: '/',
   });

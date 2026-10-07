@@ -1,8 +1,8 @@
 # Docket — Eviction Case Management
 
 Single project: an Express + Prisma API and a React (Vite) client in one repo, one build,
-one deploy. In production Express serves the built client and the `/api/*` routes itself,
-so there is no CORS setup and no second service.
+one deploy. Hosted on Netlify: the built client on the CDN and the same Express app as one
+function at `/api/*`, so there is no CORS setup and no second service.
 
 Design decisions live in [`docs/requirements.md`](docs/requirements.md),
 [`docs/db-schema.md`](docs/db-schema.md) and [`docs/field-mapping.md`](docs/field-mapping.md).
@@ -15,14 +15,15 @@ Design decisions live in [`docs/requirements.md`](docs/requirements.md),
 | Code scaffolded (API, client, rules) | Done — never compiled or run yet |
 | `npm install` | Done |
 | Local Postgres reachable on :5432 | Yes, listening |
-| **Database credentials** | **Blocked — `.env` has the wrong password (Prisma P1000)** |
-| Initial migration (`prisma/migrations/`) | Not created yet — blocked by the above |
+| Database credentials | Done |
+| Initial migration (`prisma/migrations/`) | Done: `20260810203913_init` |
 | First run of the app | Not yet |
 | Stage lists built in Configuration | Not yet — the app ships with none |
-| Deployed to Render | Not yet |
+| Netlify setup (function, build, config) | Done: `netlify.toml`, `netlify/functions/api.mts` |
+| Deployed to Netlify | Not yet: see `docs/netlify-deployment.md` |
 
-**Next action:** set `DB_USER` / `DB_PASSWORD` in `.env` to your real Postgres credentials
-(see Troubleshooting below), then `npm run prisma:migrate -- --name init`, then `npm run dev`.
+**Next action:** `npm install` (new Netlify dependencies), `npm run typecheck`, then follow
+`docs/netlify-deployment.md` to create the Netlify site and deploy.
 
 ## Getting started (local)
 
@@ -59,23 +60,24 @@ DB_USER="postgres"        # local credentials, as parts
 DB_PASSWORD="postgres"
 # DB_HOST / DB_PORT / DB_NAME / DB_SCHEMA default to localhost / 5432 / docket / public
 
-DATABASE_URL_HOSTED=""    # Render → Postgres → Connect → External Database URL
+DATABASE_URL_HOSTED=""    # a hosted Postgres URL, e.g. from `netlify database status --show-credentials`
 ```
 
 The local side is assembled from parts because the password is escaped for you — paste it
 exactly as it is, symbols and all. If you'd rather give the whole string yourself, set
 `DATABASE_URL_LOCAL` instead; it's used only when `DB_USER` is unset, and then you *do* have
-to percent-encode. The hosted side is always a full URL, since that's what Render hands out.
+to percent-encode. The hosted side is always a full URL, since that is what hosts hand out.
 
 Every database command prints its target before doing anything, so a migration can't land
 on the wrong database unnoticed:
 
 ```
-  Database: HOSTED (live) → dpg-xxxx.oregon-postgres.render.com/docket
+  Database: HOSTED (live) -> ep-xxxx.us-east-2.aws.neon.tech/neondb
 ```
 
-`npm run db:which` prints it without running anything. On Render neither variable is set —
-`DATABASE_URL` is injected there, and the app falls back to it automatically.
+`npm run db:which` prints it without running anything. On Netlify neither variable is set:
+the platform injects `NETLIFY_DB_URL` (Netlify Database) or you set `DATABASE_URL`, and
+the app falls back to whichever is present.
 
 ## Migrations run themselves
 
@@ -105,19 +107,28 @@ doesn't match.
 | `npm run db:which` | Print which database is selected |
 | `npm run db:setup` | Migrate + create first user, without starting the app |
 
-## Deploying to Render
+## Deploying to Netlify
 
-`render.yaml` describes one Web Service + one Postgres instance. Point Render at the repo
-as a Blueprint, then set `ADMIN_EMAIL` and `ADMIN_PASSWORD` (the rest is wired up):
+The client is published to the Netlify CDN from `dist/public`; the Express API runs as one
+Netlify Function at `/api/*` (`netlify/functions/api.mts` wraps the same `app`). Same origin,
+so the auth cookie works unchanged. Full plan and decisions: `docs/netlify-deployment.md`.
 
-- **Build:** `npm install --include=dev && npm run build`
-- **Start:** `npm start` — migrates, creates the first user if needed, then serves
+- **Build:** `npm run build:netlify` (Vite build, `prisma generate`, `prisma migrate deploy`)
+- **Publish:** `dist/public`
+- **Database:** Netlify Database (managed Postgres), provisioned on the first deploy because
+  `@netlify/database` is installed; its `NETLIFY_DB_URL` is picked up automatically. An
+  external Postgres works too: set `DATABASE_URL` in the site env vars instead.
+- **Env vars to set in the Netlify UI** (scopes: Builds and Functions): `JWT_SECRET`,
+  `ADMIN_EMAIL`, `ADMIN_PASSWORD`, optionally `ADMIN_NAME`.
+- **File uploads** are capped at 4 MB (Netlify Functions cap request bodies at about
+  4.5 MB of binary). Larger documents need object storage; see the plan doc.
 
-`--include=dev` matters: Render sets `NODE_ENV=production`, which otherwise makes npm skip
-the build tooling. (This project keeps build tools in `dependencies` too, so either way works.)
+First deploy: link the GitHub repo as a new Netlify project, set the env vars, deploy. If the
+build log shows the "no database connection string found" warning, the database was still
+being provisioned; click **Deploy again** and the migrations apply.
 
-Nothing else to run by hand — but **commit `prisma/migrations/`**, since the deploy replays
-those files rather than reading your schema.
+Local: `npm run dev` is unchanged. `netlify dev` (after `npm i -g netlify-cli`) runs the
+client plus the real function at http://localhost:8888 against the database in `.env`.
 
 ## Troubleshooting the first run
 

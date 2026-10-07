@@ -2,7 +2,7 @@
   "name": "docket",
   "version": "0.1.0",
   "private": true,
-  "description": "Docket — eviction case management. Single project: Express API + React client, one deploy.",
+  "description": "Docket — eviction case management. Express API + React client; deploys to Netlify as a static client plus one API function.",
   "scripts": {
     "dev": "concurrently -n server,client -c cyan,magenta \"npm:dev:server\" \"npm:dev:client\"",
     "dev:server": "tsx watch src/server/index.ts",
@@ -10,6 +10,7 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
     "build:server": "tsc -p tsconfig.server.json",
+    "build:netlify": "node scripts/netlify-build.mjs",
     "start": "node dist/server/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.server.json --noEmit",
     "prisma:generate": "prisma generate",
@@ -24,6 +25,8 @@
     "seed": "tsx src/server/seed.ts"
   },
   "dependencies": {
+    "@netlify/database": "^2.0.1",
+    "@netlify/functions": "^6.0.2",
     "@prisma/client": "^5.22.0",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",
@@ -33,6 +36,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0",
+    "serverless-http": "^3.2.0",
     "zod": "^3.23.8",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.8",
